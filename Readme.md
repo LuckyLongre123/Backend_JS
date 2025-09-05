@@ -1,4 +1,4 @@
-# 🎥 Backend Chai or Code - YouTube Clone API
+# 🎬 StreamVibe - YT Clone API
 
 <div align="center">
 
@@ -11,7 +11,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 ![Status](https://img.shields.io/badge/status-In%20Development-orange.svg)
 
-*A robust backend API for a YouTube-like video streaming platform built with modern JavaScript technologies*
+*A powerful and scalable backend API for StreamVibe - A modern YouTube-like video streaming platform*
 
 </div>
 
