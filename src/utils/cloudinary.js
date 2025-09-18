@@ -1,7 +1,7 @@
 import { v2 as cloud } from "cloudinary";
 import fs from "fs";
 
-cloudinary.config({
+cloud.config({
   cloud_name: process.env.CLOUDINET_CLOUD_NAME,
   api_key: process.env.CLOUDINET_API_KEY,
   api_secret: process.env.CLOUDINET_API_SECRET,
