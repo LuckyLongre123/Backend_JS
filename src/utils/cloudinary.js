@@ -14,8 +14,9 @@ const uploadOnCloudinery = async (filePath) => {
     const res = await cloud.uploader.upload(filePath, {
       resource_type: "auto",
     });
-    console.log(res);
-    console.log("file upload successfully. url: ", res.url);
+    // console.log(res);
+    // console.log("file upload successfully. url: ", res.url);
+    fs.unlinkSync(filePath);
     return res;
   } catch (error) {
     fs.unlinkSync(filePath); // delete temp file after opretion has vbeen failed.
