@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinery } from "../utils/cloudinary.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -16,7 +16,7 @@ const generateTokens = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(500, "Something went wrong while gererating tokens!");
+    throw new ApiError(500, "Something went wrong while generating tokens!");
   }
 };
 
@@ -33,11 +33,11 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   //! check if user already exists: username and email
-  const existeduser = await User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
-  if (existeduser) {
+  if (existedUser) {
     throw new ApiError(409, "User already exists with email or username!");
   }
 
@@ -52,9 +52,9 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   if (!avatarLocalPath) throw new ApiError(404, "avatar image is required!");
 
-  //! upload them to cloudinery, avatar and coverImage
-  const avatar = await uploadOnCloudinery(avatarLocalPath);
-  const coverImage = await uploadOnCloudinery(coverImageLocalPath);
+  //! upload them to cloudinary, avatar and coverImage
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!avatar) throw new ApiError(404, "avatar image is required!");
 
@@ -85,12 +85,12 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 export const loginUser = asyncHandler(async (req, res) => {
-  //! get user credintials form frontend
+  //! get user credentials form frontend
   const { username, email, password } = req.body;
 
   //! validate - empty
   if (!(username || email || password))
-    throw new ApiError(404, "All fieds are required!");
+    throw new ApiError(404, "All fields are required!");
 
   //! check user in exists or not
   const user = await User.findOne({ $or: [{ username }, { email }] });
@@ -102,7 +102,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid)
     throw new ApiError(401, "username or email or password is invalid!");
 
-  //! generateAcceshToken and generateRefreshToken
+  //! generateAccessToken and generateRefreshToken
   const { accessToken, refreshToken } = await generateTokens(user._id);
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -179,7 +179,7 @@ export const refreshAccessToken = async (req, res) => {
   }
 
   const user = await User.findById(decodedData._id);
-  if (!user || !user.id) {
+  if (!user || !user._id) {
     return res
       .status(401)
       .json({ message: "User not found. Invalid refresh token." });
@@ -213,3 +213,89 @@ export const refreshAccessToken = async (req, res) => {
       data: { accessToken, refreshToken: newRefreshToken },
     });
 };
+
+export const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!(oldPassword || newPassword)) {
+    throw new ApiError(400, "all field are required!");
+  }
+
+  const user = await User.findById(req?.user?._id);
+  const isCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isCorrect) {
+    throw new ApiError(400, "Invalid old password!");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully."));
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) =>
+  res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully."))
+);
+
+export const updateUserDetails = asyncHandler(async (req, res) => {
+  const { fullName, email } = req.body;
+
+  if (!(fullName || email)) throw new ApiError(400, "All fields are required!");
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: { fullName, email },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User details updated successfully."));
+});
+
+export const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarPath = req.file?.path;
+  if (!avatarPath) throw new ApiError(400, "Avatar file is required!");
+
+  const uploadedFile = await uploadOnCloudinary(avatarPath);
+  if (!uploadedFile.url)
+    throw new ApiError(400, "Error while uploading on cloudinary!");
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: uploadedFile.url,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res.status(200, user, "Avatar image updated successfully.");
+});
+
+export const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const thumbnailPath = req.file?.path;
+  if (!thumbnailPath) throw new ApiError(400, "Cover image file is required!");
+
+  const uploadedFile = await uploadOnCloudinary(thumbnailPath);
+  if (!uploadedFile.url)
+    throw new ApiError(400, "Error while uploading on cloudinary!");
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: uploadedFile.url,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res.status(200, user, "Cover image updated successfully.");
+});

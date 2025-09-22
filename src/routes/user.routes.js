@@ -1,5 +1,7 @@
 import Router from "express";
 import {
+  // changeCurrentPassword,
+  // getCurrentUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -30,4 +32,6 @@ router.route("/login").post(loginUser);
 router.route("/logout").post(veryfyJWT, logoutUser);
 router.route("/refreshtoken").post(refreshAccessToken);
 
+// router.route("/chnagepassword").post(veryfyJWT, changeCurrentPassword);
+// router.route("/getcurrentuser").post(veryfyJWT, getCurrentUser);
 export default router;

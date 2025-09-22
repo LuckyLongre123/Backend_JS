@@ -7,7 +7,7 @@ cloud.config({
   api_secret: process.env.CLOUDINET_API_SECRET,
 });
 
-const uploadOnCloudinery = async (filePath) => {
+const uploadOnCloudinary = async (filePath) => {
   try {
     if (!filePath) return null;
     //upload file
@@ -24,4 +24,4 @@ const uploadOnCloudinery = async (filePath) => {
   }
 };
 
-export { uploadOnCloudinery };
+export { uploadOnCloudinary };
